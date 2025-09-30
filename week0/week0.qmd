@@ -1,0 +1,83 @@
+# 1. Load libraries
+
+```{r}
+library(here)
+library(janitor)
+library(tidyverse)
+library(sf)
+library(kableExtra)
+```
+
+# 2. Load data
+
+```{r}
+gdw_df <- read.csv(here("data/gdw.csv")) |>
+clean_names()
+```
+
+# 3. Data Exploration
+
+## Create table with first and last 10 rows
+```{r}
+# Make objects to prepare for kable
+first_10 <- head(gdw_df) 
+last_10 <- tail(gdw_df)
+
+# Combine into one 
+combined <- rbind(first_10, last_10)
+
+# Create table with kable
+table <- knitr::kable(combined)
+```
+
+## Print table infromation
+```{r}
+dim(gdw_df)
+```
+
+# 4. Index, Summarize, Subset Data
+```{r}
+# Extract column containing country names as a vector and data frame
+country_df <- gdw_df[, "country"]
+country_vec <- gdw_df[["country"]]
+
+# Find the number of dams by dam type
+gdw_df |> 
+  group_by(dam_type) |>
+  summarise(count = n()) |>
+  ungroup()
+
+# Make a subset called sub_dam that only contains Dam entries
+sub_dam <- gdw_df |>
+  filter(dam_type == "Dam")
+
+# Re-order by ascending order of installation year
+gdw_df <- gdw_df |>
+  arrange(year_dam)
+```
+
+# 5. Data Visualization
+```{r}
+# Bar grapoh of average height of dam/barrier in meters by country
+gdw_df |>
+  group_by(country) |>
+  summarize(mean_dam_hgt_m = mean(dam_hgt_m, na.rm = TRUE)) |>
+  ungroup() |> 
+  ggplot(aes(x = country, y = mean_dam_hgt_m)) +
+    geom_bar(stat = "identity") +
+    labs(x = "Country",
+         y = "Average height of dam/barrier in meters") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+```{r}
+# Scatterplot of height of dam/barrier versus representative maximum storage capcity of reservoir in million cubic meters
+
+ggplot(data = gdw_df,
+      aes(x = cap_mcm, y = dam_hgt_m)) +
+  geom_point() +
+  labs(x = "Storage capacity of reservoir in million cubic meters",
+       y = "Height of dam/barrier in meters") +
+  theme_minimal()
+```
+
