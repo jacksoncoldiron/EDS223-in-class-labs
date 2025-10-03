@@ -1,0 +1,83 @@
+---
+title: "Week 1: Lab"
+subtitle: "Making maps with `tmap`"
+author: "Jackson Coldiron"
+date: 2025-10-2
+execute: 
+  eval: true
+format:
+  html:
+    toc: true
+editor_options: 
+  chunk_output_type: console
+---
+## Get Started
+```{r}
+# Load packages
+library(here)
+library(tidyverse)
+library(sf)
+library(stars)
+library(tmap)
+```
+
+```{r}
+# Read in spatial objects for Rapa Nui
+ei_points <- st_read(here("week1", "data", "easter_island", "ei_points.gpkg")) |> 
+  filter(type == "volcano")
+ei_elev <- read_stars(here("week1", "data", "easter_island", "ei_elev.tif"))
+ei_borders <- st_read(here("week1", "data", "easter_island", "ei_border.gpkg"))
+ei_roads <- st_read(here("week1", "data", "easter_island", "ei_roads.gpkg"))
+```
+
+## 2. Single-object map
+```{r}
+# Create a single object map with tmap
+tm_shape(ei_borders) +
+  tm_borders()
+```
+## 3. Multi-Object Map
+```{r}
+tm_shape(ei_borders) +
+  tm_borders() +
+  tm_shape(ei_elev) +
+  tm_raster() +
+  tm_shape(ei_points) +
+  tm_dots() +
+  tm_shape(ei_roads) +
+  tm_lines()
+  
+```
+## 4. Interactive Map
+```{r}
+# Switch from the default plot mode to view
+tmap_mode("view")
+tmap_mode("plot")
+
+# Plot interactive
+ei_map <- tm_shape(ei_elev) + # Start with elevation
+  tm_graticules() + # Add in gridlines
+  tm_raster(col.scale = tm_scale_continuous(values = "-rd_yl_gn"), # Customize color scaling
+            col.legend = tm_legend("Elevation (m asl)")) + # Add legend title
+  tm_shape(ei_borders) + 
+    tm_borders() +
+  tm_shape(ei_roads) +
+    tm_lines() +
+  tm_shape(ei_points) +
+    tm_symbols(shape = 24, 
+               size = "elevation", 
+               size.legend = tm_legend("Volcanoes (m asl)")) +
+  tm_compass(position = c("right", "top")) +
+  tm_scalebar() +
+  tm_title("Easter Island")
+
+ei_map
+```
+
+## 5. Create Map with ggplot
+```{r}
+ggplot(data = ei_elev) +
+  geom_sf() +
+  geom_sf(data = ei_points)
+```
+
