@@ -487,7 +487,10 @@ tm_shape(world_vector) +
 A scale bar is a graphic indicator of the relation between a distance on a map and the corresponding distance in the real world. A north arrow, or a map compass or compass rose, indicates the orientation of the map. North arrows can be added to every map, but are not necessary on maps of large areas (e.g. global maps) where the orientation is obvious.
 
 ```{r}
-
+tm_shape(world_vector) +
+  tm_fill() +
+  tm_scalebar() +
+  tm_compass(north = 180, position = c("left", "top"))
 
 ```
 
@@ -496,7 +499,14 @@ A scale bar is a graphic indicator of the relation between a distance on a map a
 Similar to the `theme()` function in `ggplot2`, the `tm_layout()` function in `tmap` controls many of the map elements of the map layout.
 
 ```{r}
-
+tm_shape(world_vector) +
+  tm_polygons(fill = "wb_income_region",
+              fill.legend = tm_legend(title = "Regional Income")) +
+  tm_title(text = "Global income", 
+           frame = TRUE) +
+  tm_layout(color_vision_deficiency_sim = ("protan"),
+            style = "classic",
+            bg.color = "grey95")
 ```
 
 
@@ -506,12 +516,19 @@ Similar to the `theme()` function in `ggplot2`, the `tm_layout()` function in `t
 One of the most powerful aspects of `tmap` is the ease of creating interactive maps. `tmap` has two modes `"plot"` which creates static maps and `"view"` which creates interactive maps that can be easily embedded in quarto docs. It's as easy as using the `tmap_mode()`!
 
 ```{r}
+tmap_mode("view")
+```
 
+```{r}
+tm_shape(world_vector) +
+  tm_polygons(fill = "gdp_per_cap",
+              fill.legend = tm_legend(title = "GDP Per Cap"))
 ```
 
 To return to regular plotting mode, simply reset `tmap_mode`.
 
 ```{r}
+tmap_mode("plot")
 
 ```
 
@@ -520,7 +537,11 @@ To return to regular plotting mode, simply reset `tmap_mode`.
 Maps can be stored as objects for for adding additional layers and saving programmatically. Maps can be saved directly in `tmap` using the `tm_save()` function. 
 
 ```{r}
+map1 <- tm_shape(world_vector) +
+  tm_polygons(fill = "gdp_per_cap",
+              fill.legend = tm_legend(title = "GDP Per Cap"))
 
+tmap_save(map1, here::here("week1", "tmap-example.png"))
 
 ```
 
