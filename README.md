@@ -1,4 +1,4 @@
-# EDS 223 Geospatial Data Analysis: in-class-labs
+# EDS 223 Geospatial Data Analysis & Remote Sensing
 
 ## Description
 Repository containing weekly labs for EDS 223. Each week the lab involves a different objective with specific data sets and outputs.
