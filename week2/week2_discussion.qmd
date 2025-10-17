@@ -1,0 +1,101 @@
+---
+title: "Week 2: Discussion"
+subtitle: "Working with multiple vector types"
+author: "Jackson Coldiron"
+date: last-modified
+format:
+  html:
+    toc: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## 1. Get Started
+```{r}
+# Load libraries
+library(tidyverse)
+library(sf)
+library(tmap)
+
+# Read in the data for Colombia's ecoregions, roads and bird observations
+ecoregions <- st_read(here::here("week2", "data", "Colombia", "Colombia.shp"))
+
+roads <- st_read(here::here("week2", "data", "RDLINE_colombia", "RDLINE_colombia.shp"))
+
+birds <- read_csv(here::here("week2", "data", "dataves.csv")) |>
+  as.tibble() |>
+  rename(long = decimal_longitude,
+         lat = decimal_latitude) |>
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+```
+
+## 2. View class and geometry type
+```{r}
+# Check the class of all vector objects (including the spatially-enabled bird observation dataset)
+class(ecoregions) #sf data.frame
+class(roads) #sf data.frame
+class(birds) #
+
+# Peak at the geometry type
+st_geometry_type(ecoregions)
+st_geometry_type(roads)
+st_geometry_type(birds)
+```
+
+## 3. Select a macro ecoregion of interest
+```{r}
+# Use filter to select a macro region of interest in Colombia's ecoregions dataset
+col_andean <- ecoregions |>
+  # Set categorical "levels" in attribute N1_MacroBi (subregions of Colombia)
+  mutate(N1_MacroBi = as.factor(N1_MacroBi)) |>
+  # Subset to Andean region of Colombia
+  filter(N1_MacroBi == "Andean")
+
+```
+
+## 4. Play with coordinate reference system
+```{r}
+# View CRS of each object
+st_crs(ecoregions)
+st_crs(roads)
+st_crs(birds)
+
+# View units of each object CRS 
+st_crs(ecoregions)$units
+st_crs(roads)$units
+st_crs(birds)$units
+
+# Extract the longitude and latitude from the geometry column
+# In the case that we want to convert this into a csv to share
+birds_purrr <- birds |>
+  # Extract lat & long from geometry column
+  mutate(lon = unlist(purrr::map(birds$geometry, 1)), # longitude = first component (x)
+         lat = unlist(purrr::map(birds$geometry, 2))) |> # latitude = second component (y)
+           st_drop_geometry() # Remove geometry column now that it's redundant
+
+# Convert long and lat into a geometry again with st_as_sf() to obtain a proper dataframe
+birds_sf <- birds_purrr |>
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+
+class(birds_sf)
+```
+
+## 5. Make a map
+```{r}
+# Check that the CRS of the ecoregions and roads datasets match
+st_crs(ecoregions) == st_crs(roads) # CRS are the same
+
+# Transform bird observation dataset into the same CRS to match other data
+birds_sf |>
+  st_transform(crs = ecoregions)
+
+# Use tmap to plot the ecoregions, roads and bird observations together
+tm_shape(ecoregions) +
+  tm_polygons() +
+  tm_shape(roads) +
+  tm_lines() +
+  tm_shape(birds_sf) +
+  tm_dots() +
+  tm_title("Colombia ecoregions, roads,\nand bird observations")
+```
+
